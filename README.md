@@ -16,4 +16,4 @@ This is my first project in C.
 * Read a DB file specifying a list of employees
 * Add an employee to the DB
 * Update the hours an employee has worked given their name
-* Remove and employee from the DB given their name
+* Remove an employee from the DB given their name

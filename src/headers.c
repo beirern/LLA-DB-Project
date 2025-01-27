@@ -14,45 +14,27 @@
 // Helper method to pring what a header structure holds
 void print_header(struct dbheader_t *header)
 {
-  printf("count: %d\n", ntohs(header->count));
-  printf("version: %d\n", ntohs(header->version));
-  printf("filesize: %d\n", ntohl(header->filesize));
-  printf("magic: %d\n", ntohl(header->magic));
+  printf("\tcount: %d\n", header->count);
+  printf("\tversion: %d\n", header->version);
+  printf("\tfilesize: %d\n", header->filesize);
+  printf("\tmagic: %d\n", header->magic);
 }
 
 // Writes the headers to a file. If this is a new file and there
 // are no headers that were read in then passes the default values
 // defined in headers.h
-int write_headers(int fd, struct dbheader_t **headerout)
+int read_default_headers(struct dbheader_t **headerout)
 {
-  // If this is null then we did not read in any headers, i.e. this is a new file
+  *headerout = malloc(sizeof(struct dbheader_t));
   if (*headerout == NULL)
   {
-    struct dbheader_t header =
-        {
-            htons(0),
-            htons(CURRENT_VERSION),
-            htonl(sizeof(struct dbheader_t)),
-            htonl(MAGIC)};
-
-    // Since this is a new file we do not need to lseek the beginning of it
-    write(fd, &header, sizeof(struct dbheader_t));
-    *headerout = &header;
+    perror("Failed to allocate memory for default headers");
+    return STATUS_FAILED;
   }
-  else
-  {
-    (*headerout)->count = htons((*headerout)->count);
-    (*headerout)->version = htons((*headerout)->version);
-    (*headerout)->filesize = htonl((*headerout)->filesize);
-    (*headerout)->magic = htonl((*headerout)->magic);
-
-    if (lseek(fd, 0, SEEK_SET) == -1)
-    {
-      perror("Failed to reset position in file for writing");
-      return STATUS_FAILED;
-    }
-    write(fd, *headerout, sizeof(struct dbheader_t));
-  }
+  (*headerout)->count = 0;
+  (*headerout)->version = CURRENT_VERSION;
+  (*headerout)->filesize = sizeof(struct dbheader_t);
+  (*headerout)->magic = MAGIC;
 
   return STATUS_SUCCESS;
 }
@@ -81,7 +63,8 @@ int get_size_of_file(int fd)
 // Fails if
 // The size of the file via stat is not the same as the filesize in the header
 // The version in the header file is not the same as the version the program is running on
-int read_headers(int fd, struct dbheader_t **headerout)
+// The file magic value is not the same as the one in code
+int read_headers_from_file(int fd, struct dbheader_t **headerout)
 {
   struct dbheader_t *p_header = malloc(sizeof(struct dbheader_t));
 
@@ -99,7 +82,13 @@ int read_headers(int fd, struct dbheader_t **headerout)
 
   if (p_header->version != CURRENT_VERSION)
   {
-    fprintf(stderr, "Version of file (%d) is not the same as program's (%d)", p_header->version, CURRENT_VERSION);
+    fprintf(stderr, "Version of file (%d) is not the same as program's (%d)\n", p_header->version, CURRENT_VERSION);
+    return STATUS_FAILED;
+  }
+
+  if (p_header->magic != MAGIC)
+  {
+    fprintf(stderr, "Magic of file (%d) is not the same as program's (%d)\n", p_header->magic, MAGIC);
     return STATUS_FAILED;
   }
 
