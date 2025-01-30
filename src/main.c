@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
+#include <errno.h>
 
 #include <file.h>
 #include <headers.h>
@@ -33,13 +34,15 @@ int main(int argc, char *argv[])
   char *address = NULL;
   int hours = 0;
   int listEmployees = 0;
+  unsigned int newHours = 0;
+  int remove = 0;
 
   // Double pointer so that we can modify and pass reference to
   // headers
   struct dbheader_t **headerout = malloc(sizeof(struct dbheader_t *));
   struct employee_t **employeeout = malloc(sizeof(struct employee_t *));
 
-  while ((getOptCode = getopt(argc, argv, "nf:q:e:l")) != -1)
+  while ((getOptCode = getopt(argc, argv, "nf:q:e:lu:r")) != -1)
   {
     switch (getOptCode)
     {
@@ -50,11 +53,10 @@ int main(int argc, char *argv[])
       fileName = optarg;
       break;
     case 'q':
-      strcpy(employeeName, optarg);
+      employeeName = optarg;
       break;
     case 'e':
       employeeInfo = optarg;
-      printf("%s\n", employeeInfo);
       newEmployee = 1;
       char *delim = ",";
       name = strtok(employeeInfo, delim);
@@ -72,7 +74,6 @@ int main(int argc, char *argv[])
         abort();
       }
       char *hoursstr = strtok(NULL, delim);
-      printf("%s %s %s\n", name, address, hoursstr);
       if (hoursstr == NULL)
       {
         fprintf(stderr, "Failed to parse out the hours of the employee!\n");
@@ -89,6 +90,19 @@ int main(int argc, char *argv[])
       break;
     case 'l':
       listEmployees = 1;
+      break;
+    case 'u':
+      char *resultPointer = NULL;
+      newHours = strtoul(optarg, &resultPointer, 10);
+      errno = 0; // strtoul sets errno to non 0 on failure
+      if (resultPointer == optarg || *resultPointer != '\0' || errno != 0)
+      {
+        perror("Failed to convert hours to update to an unsigned int");
+        abort();
+      }
+      break;
+    case 'r':
+      remove = 1;
       break;
     case '?':
       if (optopt == 'c')
@@ -172,6 +186,18 @@ int main(int argc, char *argv[])
     else
     {
       printf("Found employee with hours: %d\n", e->hours);
+      if (newHours)
+      {
+        e->hours = newHours;
+        printf("Updated %s's hours to %d\n", e->name, e->hours);
+      }
+
+      if (remove)
+      {
+        remove_employee(employeeout, employeeName, (*headerout)->count);
+        (*headerout)->count -= 1;
+        *employeeout = reallocarray(*employeeout, (*headerout)->count, sizeof(struct employee_t));
+      }
     }
   }
 

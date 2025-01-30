@@ -38,9 +38,26 @@ struct employee_t *query_employee(struct employee_t **employeeout, char *employe
     if (strcmp((*employeeout)[i].name, employeeName) == 0)
     {
       printf("hi\n");
-      return employeeout[i];
+      return &(*employeeout)[i];
     }
   }
 
   return NULL;
+}
+
+int remove_employee(struct employee_t **employeeout, char *employeeName, unsigned int count)
+{
+  int i;
+  int newPosition = 0;
+  // Go through employees and don't put employee to remove in the array
+  for (i = 0; i < count; i++)
+  {
+    if (strcmp((*employeeout)[i].name, employeeName) != 0)
+    {
+      (*employeeout)[newPosition] = (*employeeout)[i];
+      newPosition++;
+    }
+  }
+
+  return STATUS_SUCCESS;
 }
