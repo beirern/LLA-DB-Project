@@ -7,6 +7,8 @@ This is my first project in C.
 # Usage
 Run `./bin/final -h` for more information!
 
+If you need to build the file run `./build_object_files.sh` which runs some gcc commands for files header and c files in `include` and `src`. I found this easier than trying to make a Makefile.
+
 # Project Specs
 
 ## File Validation
