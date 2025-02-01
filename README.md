@@ -5,8 +5,9 @@ This project creates a database that writes the data to disk. The database is me
 This is my first project in C.
 
 # Usage
+Run `./bin/final -h` for more information!
 
-# Specs
+# Project Specs
 
 ## File Validation
 * Check that the DB file is using the version of the project API
