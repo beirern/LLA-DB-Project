@@ -136,6 +136,7 @@ int main(int argc, char *argv[])
     }
     if (read_default_headers(headerout) == STATUS_FAILED)
     {
+      close(fd);
       abort();
     }
   }
@@ -149,6 +150,7 @@ int main(int argc, char *argv[])
 
     if (read_headers_from_file(fd, headerout) == STATUS_FAILED)
     {
+      close(fd);
       abort();
     }
   }
@@ -160,10 +162,12 @@ int main(int argc, char *argv[])
   if (*employeeout == NULL)
   {
     perror("Failed to allocate memory for employees");
+    close(fd);
     abort();
   }
   if (read_employees(employeeout, fd, (*headerout)->count) == STATUS_FAILED)
   {
+    close(fd);
     abort();
   }
 
@@ -218,8 +222,15 @@ int main(int argc, char *argv[])
 
   if (write_to_file(fd, headerout, employeeout) == STATUS_FAILED)
   {
+    close(fd);
     abort();
   }
+
+  free(*headerout);
+  free(*employeeout);
+  free(headerout);
+  free(employeeout);
+  close(fd);
 
   return 0;
 }

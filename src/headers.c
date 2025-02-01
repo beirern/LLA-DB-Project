@@ -56,7 +56,9 @@ int get_size_of_file(int fd)
     return STATUS_FAILED;
   }
 
-  return p_stat_info->st_size;
+  off_t size = p_stat_info->st_size;
+  free(p_stat_info);
+  return size;
 }
 
 // Reads in headers in a file
