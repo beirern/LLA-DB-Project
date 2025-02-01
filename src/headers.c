@@ -8,6 +8,7 @@
 
 #include <common.h>
 #include <headers.h>
+#include <file.h>
 
 // This file handles makihg and parsing our file headers
 
@@ -20,10 +21,8 @@ void print_header(struct dbheader_t *header)
   printf("\tmagic: %d\n", header->magic);
 }
 
-// Writes the headers to a file. If this is a new file and there
-// are no headers that were read in then passes the default values
-// defined in headers.h
-int read_default_headers(struct dbheader_t **headerout)
+// Sets *headerout to header struct with default headers
+int intialize_default_headers(struct dbheader_t **headerout)
 {
   *headerout = malloc(sizeof(struct dbheader_t));
   if (*headerout == NULL)
@@ -37,28 +36,6 @@ int read_default_headers(struct dbheader_t **headerout)
   (*headerout)->magic = MAGIC;
 
   return STATUS_SUCCESS;
-}
-
-// Gets the size of a file determined by stat
-int get_size_of_file(int fd)
-{
-  struct stat *p_stat_info = malloc(sizeof(struct stat));
-  if (p_stat_info == NULL)
-  {
-    perror("Malloc failed");
-    return STATUS_FAILED;
-  }
-
-  int stat_status = fstat(fd, p_stat_info);
-  if (stat_status == -1)
-  {
-    perror("Failed to stat file");
-    return STATUS_FAILED;
-  }
-
-  off_t size = p_stat_info->st_size;
-  free(p_stat_info);
-  return size;
 }
 
 // Reads in headers in a file
@@ -75,7 +52,11 @@ int read_headers_from_file(int fd, struct dbheader_t **headerout)
     perror("Malloc failed");
     return STATUS_FAILED;
   }
-  read(fd, p_header, sizeof(struct dbheader_t));
+  if (read(fd, p_header, sizeof(struct dbheader_t)) == -1)
+  {
+    perror("Reading the headers failed");
+    return STATUS_FAILED;
+  }
 
   p_header->count = ntohs(p_header->count);
   p_header->version = ntohs(p_header->version);
@@ -94,12 +75,14 @@ int read_headers_from_file(int fd, struct dbheader_t **headerout)
     return STATUS_FAILED;
   }
 
-  if (get_size_of_file(fd) != p_header->filesize)
+  off_t file_size = get_size_of_file(fd);
+  if (file_size != p_header->filesize)
   {
-    fprintf(stderr, "Size of file according to fstat (%d) does not match the header size (%d)\n", get_size_of_file(fd), p_header->filesize);
+    fprintf(stderr, "Size of file according to fstat (%ld) does not match the header size (%d)\n", file_size, p_header->filesize);
     return STATUS_FAILED;
   }
 
+  // Set header pointer to the header with values set
   *headerout = p_header;
 
   return STATUS_SUCCESS;

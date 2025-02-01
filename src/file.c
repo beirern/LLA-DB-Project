@@ -4,12 +4,11 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <stdlib.h>
 
 #include <common.h>
 #include <headers.h>
 #include <employees.h>
-
-// These functions are to handle opening and creating a db file
 
 // Opens a file with the given filename
 // return int fd File descriptor or STATUS_FAILED indicating an error
@@ -47,16 +46,41 @@ int create_db_file(char *fileName)
   return fd;
 }
 
-// int write_to_file(int fd, struct dbheader_t **headerout)
+// Gets the size of a file determined by stat
+off_t get_size_of_file(int fd)
+{
+  struct stat *p_stat_info = malloc(sizeof(struct stat));
+  if (p_stat_info == NULL)
+  {
+    perror("Malloc failed");
+    return STATUS_FAILED;
+  }
+
+  int stat_status = fstat(fd, p_stat_info);
+  if (stat_status == -1)
+  {
+    perror("Failed to stat file");
+    return STATUS_FAILED;
+  }
+
+  off_t size = p_stat_info->st_size;
+  free(p_stat_info);
+  return size;
+}
+
+// Write headers and employee information to file
 int write_to_file(int fd, struct dbheader_t **headerout, struct employee_t **employeeout)
 {
+  // Set the file offset back to the beginning since we might have read into it
   if (lseek(fd, 0, SEEK_SET) == -1)
   {
     perror("Failed to reset position in file for writing");
     return STATUS_FAILED;
   }
 
+  // Keep the count before we adjust it for Endianness
   unsigned int nonEndianCount = (*headerout)->count;
+  unsigned int nonEndianFileSize = (*headerout)->filesize;
 
   (*headerout)->count = htons((*headerout)->count);
   (*headerout)->version = htons((*headerout)->version);
@@ -72,6 +96,12 @@ int write_to_file(int fd, struct dbheader_t **headerout, struct employee_t **emp
   if (write(fd, *employeeout, sizeof(struct employee_t) * nonEndianCount) == -1)
   {
     perror("Failed to write employees to file");
+    return STATUS_FAILED;
+  }
+
+  if (ftruncate(fd, nonEndianFileSize) == -1)
+  {
+    perror("Failed to truncate file!");
     return STATUS_FAILED;
   }
 

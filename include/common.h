@@ -5,3 +5,15 @@
 #ifndef STATUS_FAILED
 #define STATUS_FAILED -1
 #endif
+
+#ifndef OPTION_PARSING_ERROR
+#define OPTION_PARSING_ERROR 1
+#endif
+
+#ifndef GENERAL_ERROR
+#define GENERAL_ERROR 2
+#endif
+
+#ifndef EMPLOYEE_NOT_FOUND_ERROR
+#define EMPLOYEE_NOT_FOUND_ERROR 3
+#endif

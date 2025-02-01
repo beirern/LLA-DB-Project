@@ -6,6 +6,7 @@
 
 int open_db_file(char *fileName);
 int create_db_file(char *fileName);
+int get_size_of_file(int fd);
 int write_to_file(int fd, struct dbheader_t **headerout, struct employee_t **employeeout);
 
 #endif

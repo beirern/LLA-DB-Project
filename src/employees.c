@@ -5,7 +5,8 @@
 #include <employees.h>
 #include <common.h>
 
-int write_employees(struct employee_t **employeeout, char *name, char *address, int hours, unsigned int count)
+// Adds an employee to the array
+int add_employee(struct employee_t **employeeout, char *name, char *address, int hours, unsigned int count)
 {
   strcpy((*employeeout)[count - 1].name, name);
   strcpy((*employeeout)[count - 1].address, address);
@@ -14,6 +15,7 @@ int write_employees(struct employee_t **employeeout, char *name, char *address, 
   return STATUS_SUCCESS;
 }
 
+// Reads the employees into memory
 int read_employees(struct employee_t **employeeout, int fd, unsigned int count)
 {
   int i;
@@ -29,15 +31,15 @@ int read_employees(struct employee_t **employeeout, int fd, unsigned int count)
   return STATUS_SUCCESS;
 }
 
+// Finds an employee
+// Returns a pointer to the employee or NULL if not found
 struct employee_t *query_employee(struct employee_t **employeeout, char *employeeName, unsigned int count)
 {
   int i;
   for (i = 0; i < count; i++)
   {
-    printf("%s %s\n", (*employeeout)[i].name, employeeName);
     if (strcmp((*employeeout)[i].name, employeeName) == 0)
     {
-      printf("hi\n");
       return &(*employeeout)[i];
     }
   }
@@ -45,11 +47,13 @@ struct employee_t *query_employee(struct employee_t **employeeout, char *employe
   return NULL;
 }
 
+// Removes an employee from the employees array
 int remove_employee(struct employee_t **employeeout, char *employeeName, unsigned int count)
 {
   int i;
   int newPosition = 0;
-  // Go through employees and don't put employee to remove in the array
+  // Go through employees and if it sees employee to remove it just
+  // puts employee[i+1]'s info in there and keeps moving
   for (i = 0; i < count; i++)
   {
     if (strcmp((*employeeout)[i].name, employeeName) != 0)
@@ -60,4 +64,18 @@ int remove_employee(struct employee_t **employeeout, char *employeeName, unsigne
   }
 
   return STATUS_SUCCESS;
+}
+
+// Prints out the employees in employeeout
+// Employees given an id by their index in the array and then their info is printed
+void list_employees(struct employee_t **employeeout, unsigned int count)
+{
+  int i;
+  for (i = 0; i < count; i++)
+  {
+    printf("Employee %d\n", i);
+    printf("\tName %s\n", (*employeeout)[i].name);
+    printf("\tAddress %s\n", (*employeeout)[i].address);
+    printf("\tHours Worked %d\n", (*employeeout)[i].hours);
+  }
 }
